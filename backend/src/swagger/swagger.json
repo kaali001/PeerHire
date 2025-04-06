@@ -1,0 +1,579 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PeerHire API",
+    "version": "1.0.0",
+    "description": "## Introduction\n\nPeerHire is a job posting and bidding platform API that enables:\n- Employers to post technical jobs and manage bids\n- Freelancers to find relevant jobs and submit proposals\n- Secure authentication with role-based access control\n- Real-time bid management workflow\n\n## Key Features\n- JWT-based authentication\n- Skills-based job filtering\n- Bid lifecycle management\n- Comprehensive error handling\n- RESTful design principles\n\n## Authentication\nAll protected endpoints require a JWT token in the Authorization header:\n`Authorization: Bearer {token}`"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development environment"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User registration and authentication endpoints"
+    },
+    {
+      "name": "Jobs",
+      "description": "Job posting management and listings"
+    },
+    {
+      "name": "Bids",
+      "description": "Bid submission and management operations"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT obtained during authentication. Include in header: 'Authorization: Bearer {token}'"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["name", "email", "password", "role"],
+        "description": "User account details for registration",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe",
+            "minLength": 3,
+            "description": "User's full name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@example.com",
+            "description": "Unique email address"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 6,
+            "example": "securePassword123",
+            "description": "Password (minimum 6 characters)"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["freelancer", "employer"],
+            "example": "freelancer",
+            "description": "Account type determining system permissions"
+          }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "required": ["title", "description", "budget", "duration", "skillsRequired"],
+        "description": "Job posting details",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "React Developer Needed",
+            "minLength": 5,
+            "description": "Job title/position name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Looking for an experienced React developer",
+            "minLength": 20,
+            "description": "Detailed job requirements and description"
+          },
+          "budget": {
+            "type": "number",
+            "minimum": 1,
+            "example": 5000,
+            "description": "Maximum project budget in USD"
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 1,
+            "example": 30,
+            "description": "Project duration in days"
+          },
+          "skillsRequired": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["react", "nodejs"],
+            "description": "Technical skills required for the job (case-insensitive)"
+          }
+        }
+      },
+      "Bid": {
+        "type": "object",
+        "required": ["bidAmount", "timeline", "message"],
+        "description": "Freelancer's proposal for a job",
+        "properties": {
+          "bidAmount": {
+            "type": "number",
+            "minimum": 1,
+            "example": 4500,
+            "description": "Proposed amount in USD (must be ≤ job budget)"
+          },
+          "timeline": {
+            "type": "number",
+            "minimum": 1,
+            "example": 25,
+            "description": "Proposed completion timeline in days"
+          },
+          "message": {
+            "type": "string",
+            "example": "I can complete this project in 3 weeks",
+            "minLength": 20,
+            "description": "Detailed proposal message to employer"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "description": "Standard error response format",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Error message description",
+            "description": "Human-readable error explanation"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Standard error response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register new user",
+        "description": "## Creates a new user account\n\n**Requirements:**\n- Password must be ≥6 characters\n- Email must be unique\n- Role cannot be changed after registration\n\n**User Roles:**\n- `employer`: Can post jobs and manage bids\n- `freelancer`: Can bid on jobs",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT access token",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully registered !!!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error",
+            "description": "Validation Error - Invalid input or existing email"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Registration failed"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate user",
+        "description": "## Generates JWT access token\n\n**Flow:**\n1. Verify email exists\n2. Validate password\n3. Generate 24-hour valid JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "$ref": "#/components/schemas/User/properties/email"
+                  },
+                  "password": {
+                    "$ref": "#/components/schemas/User/properties/password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT access token",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "logged in successfully !!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error",
+            "description": "Invalid Credentials - Email/password mismatch"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Authentication failed"
+          }
+        }
+      }
+    },
+    "/jobs/create": {
+      "post": {
+        "tags": ["Jobs"],
+        "summary": "Create new job posting",
+        "description": "## Employer-only endpoint\n\n**Workflow:**\n1. Validate employer role\n2. Create job record\n3. Link to posting employer\n\n**Validation:**\n- Budget/duration must be ≥1\n- Minimum 1 required skill",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Job"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error",
+            "description": "Validation Error - Missing/invalid fields"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error",
+            "description": "Forbidden - Non-employer access"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Job creation failed"
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List all jobs",
+        "description": "## Public job listings\n\n**Features:**\n- Filter by skills using query parameter\n- Returns most recent first\n- Skills filter uses case-insensitive partial matching",
+        "parameters": [
+          {
+            "name": "skills",
+            "in": "query",
+            "description": "Comma-separated skills to filter (e.g., 'react,nodejs')",
+            "schema": {
+              "type": "string"
+            },
+            "example": "react,nodejs"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job List Retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Database query failed"
+          }
+        }
+      }
+    },
+    "/jobs/{jobId}": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "Get job details",
+        "description": "## Public job details\n\n**Includes:**\n- Full description\n- Employer profile\n- Skills requirements\n- Budget/duration",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectID of the job"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job Details Retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error",
+            "description": "Not Found - Invalid job ID"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Database query failed"
+          }
+        }
+      }
+    },
+    "/bids/{jobId}": {
+      "post": {
+        "tags": ["Bids"],
+        "summary": "Submit bid proposal",
+        "description": "## Freelancer-only endpoint\n\n**Validation:**\n- Bid amount ≤ job budget\n- Timeline ≤ job duration\n- One bid per freelancer per job",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectID of target job"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bid"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bid Submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bid"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error",
+            "description": "Validation Error - Invalid bid parameters"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error",
+            "description": "Not Found - Invalid job ID"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Bid submission failed"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Bids"],
+        "summary": "List job bids",
+        "description": "## View all bids for a job\n\n**Includes:**\n- Freelancer details\n- Bid status\n- Proposal details\n\n**Access Control:**\n- Employers see all bids\n- Freelancers see only their bids",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectID of target job"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bids Retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "job": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Job reference ID"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "Job title for context"
+                        },
+                        "budget": {
+                          "type": "number",
+                          "description": "Original job budget"
+                        }
+                      }
+                    },
+                    "bids": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Bid"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error",
+            "description": "Not Found - Invalid job ID"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Database query failed"
+          }
+        }
+      }
+    },
+    "/bids/{bidId}/accept": {
+      "patch": {
+        "tags": ["Bids"],
+        "summary": "Accept bid proposal",
+        "description": "## Employer-only endpoint\n\n**Workflow:**\n1. Validate job ownership\n2. Mark bid as accepted\n3. Notify freelancer\n4. Close job for new bids",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "bidId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectID of target bid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bid Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bid"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error",
+            "description": "Forbidden - Unauthorized acceptance attempt"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error",
+            "description": "Not Found - Invalid bid ID"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Status update failed"
+          }
+        }
+      }
+    },
+    "/bids/{bidId}/reject": {
+      "patch": {
+        "tags": ["Bids"],
+        "summary": "Reject bid proposal",
+        "description": "## Employer-only endpoint\n\n**Workflow:**\n1. Validate job ownership\n2. Mark bid as rejected\n3. Notify freelancer\n\n**Notes:**\n- Multiple bids can be rejected\n- Rejected bids cannot be modified",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "bidId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectID of target bid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bid Rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bid"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error",
+            "description": "Not Found - Invalid bid ID"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error",
+            "description": "Server Error - Status update failed"
+          }
+        }
+      }
+    }
+  }
+}

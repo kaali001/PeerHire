@@ -61,6 +61,6 @@ app.listen(PORT, () => {
     
     Server running on port ${PORT}
     Environment: ${process.env.NODE_ENV || 'development'}
-    Docs: http://localhost:${PORT}/api-docs
+    Docs: https://peerhire-wh4r.onrender.com/api-docs/
     `);
 });

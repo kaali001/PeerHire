@@ -1,40 +1,8 @@
-# 🚀 PeerHire - Job Posting & Bidding API
+<div align="center">  <h1>🚀 PeerHire - Job Posting & Bidding API</h1> </div> 
 
-![PeerHire Banner](https://via.placeholder.com/1200x400/2D3748/FFFFFF?text=PeerHire+API)  
-*A RESTful API for job posting and freelancer bidding system with JWT authentication*
+PeerHire is a robust backend API designed to power modern job posting and freelancing platforms. This RESTful service provides all the core functionality needed to connect employers with skilled freelancers through a secure bidding system.
 
-## 🌟 Features
 
-<div style="display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0;">
-
-<div style="flex: 1; min-width: 250px; padding: 15px; background: #f5f5f5; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-<h3>🔐 Authentication</h3>
-<ul>
-<li>JWT-based security</li>
-<li>Role-based access control</li>
-<li>Password hashing with bcrypt</li>
-</ul>
-</div>
-
-<div style="flex: 1; min-width: 250px; padding: 15px; background: #f5f5f5; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-<h3>💼 Job Management</h3>
-<ul>
-<li>Create and manage job posts</li>
-<li>Skills-based filtering</li>
-<li>Detailed job listings</li>
-</ul>
-</div>
-
-<div style="flex: 1; min-width: 250px; padding: 15px; background: #f5f5f5; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-<h3>💰 Bidding System</h3>
-<ul>
-<li>Submit competitive bids</li>
-<li>Accept/reject workflow</li>
-<li>Bid status tracking</li>
-</ul>
-</div>
-
-</div>
 
 ## 🛠 Technologies Used
 
@@ -53,34 +21,35 @@
 - (Optional) Docker [Download](https://www.docker.com/)
 
 ### 1. Installation
-
+  Clone the repository
 ```bash
-# Clone the repository
+
 git clone https://github.com/yourusername/peerhire-api.git
 cd peerhire-api
-
-# Install dependencies
+```
+Install dependencies
+```
 npm install
 ```
 
 ### 2. Configuration
 
+ Create a .env file in the root directory:
 ``` bash
-# Create a .env file in the root directory:
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/peerhire
 JWT_SECRET=your_secure_secret_key_here
 ```
 
 ### 3. Running the Server
+ Development mode (with auto-restart)
+```
+npm run dev
+```
+Production mode
 
 ```
-# Development mode (with auto-restart)
-npm run dev
-
-# Production mode
 npm start
-
 ```
 The API will be available at:
 🌐 http://localhost:3000
@@ -178,4 +147,4 @@ docker build -t peerhire-api .
  ```
 
 
-<div align="center"> <p>Built with ❤️ by upcoming PeerHire Team</p> 
+<div align="center"> <p>Built with ❤️ by upcoming PeerHire Team</p> </div>

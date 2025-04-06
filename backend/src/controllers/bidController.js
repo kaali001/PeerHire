@@ -1,5 +1,5 @@
-const Bid = require('../models/Bid');
-const Job = require('../models/Job');
+const Bid = require('../models/bid');
+const Job = require('../models/job');
 
 exports.placeBid = async (req, res) => {
   try {

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeerHire Server Status</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --background: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 2rem;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--success);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .stats {
+            display: grid;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1); }
+            100% { transform: scale(0.95); }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-card">
+        <div class="status-indicator">
+            <div class="dot"></div>
+            <span>LIVE</span>
+        </div>
+        
+        <h1>PeerHire API Server</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span>Status</span>
+                <strong>Operational</strong>
+            </div>
+            <div class="stat-item">
+                <span>Uptime</span>
+                <strong id="uptime">Loading...</strong>
+            </div>
+            <div class="stat-item">
+                <span>Environment</span>
+                <strong id="environment">Loading...</strong>
+            </div>
+            <div class="stat-item">
+                <span>Server Time</span>
+                <strong id="time">{{TIME}}</strong>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; color: #64748b;">
+            <p>Need help? Visit our 
+                <a href="/api-docs" style="color: var(--primary); text-decoration: none;">
+                    API Documentation
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            document.getElementById('time').textContent = new Date().toLocaleString();
+        }
+        
+        function updateUptime() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('environment').textContent = data.environment;
+                    document.getElementById('uptime').textContent = 
+                        `${Math.floor(data.uptime / 60)}m ${Math.floor(data.uptime % 60)}s`;
+                });
+        }
+
+        // Initial load
+        updateTime();
+        updateUptime();
+        
+        // Update every second
+        setInterval(() => {
+            updateTime();
+            updateUptime();
+        }, 1000);
+    </script>
+</body>
+</html>

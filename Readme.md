@@ -24,8 +24,8 @@ PeerHire is a robust backend API designed to power modern job posting and freela
   Clone the repository
 ```bash
 
-git clone https://github.com/yourusername/peerhire-api.git
-cd peerhire-api
+git clone https://github.com/kaali001/PeerHire.git
+cd backend
 ```
 Install dependencies
 ```
